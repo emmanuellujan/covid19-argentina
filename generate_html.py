@@ -89,7 +89,7 @@ def generate_graphic(index_0, days_0 , y_0, label_0, col_0):
     fig.update_layout(layout)
 
     #fig.show()
-    return plotly.offline.plot(fig, output_type='div');
+    return plotly.offline.plot(fig, output_type='div', include_plotlyjs=False);
 
 
 def generate_html(html_div_0,html_div_1):
