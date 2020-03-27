@@ -66,7 +66,7 @@ def generate_graphic(index_0, days_0 , y_0, label_0, col_0):
             y=y_0,
             mode='lines+markers',
             marker_color='#6396c1',
-            name= 'Dato del Ministerio de Salud.', 
+            name= 'Datos del Ministerio de Salud.', 
         )
     )
 
@@ -103,6 +103,7 @@ def generate_html(html_div_0,html_div_1):
                 '    <h1 align="center">COVID-19, Argentina</h1>' + \
                 '    <div style="text-align: center;">' + \
                 '    <div style="display: inline-block;">' + \
+                '    <div style="width:900px;text-align:justify;"> En esta web se realiza un seguimiento de la evolución del <a href="https://www.argentina.gob.ar/salud/coronavirus-COVID-19">COVID-19</a> en Argentina, concretamente de la cantidad total de infectados y de la cantidad total de decesos por día. Las curvas azules muestran datos suministrados por el <a href="https://www.argentina.gob.ar/coronavirus/informe-diario">Ministerio de Salud</a> Argentino, y las curvas rojas muestran estimaciones elementales de la progresión de dichas variables. Las estimaciones se realizan en base a regresiones no lineales generadas a partir de los datos de los últimos 3, 7 y 14 días. El código fuente de esta web es Open Source y puede descargarse desde <a href="https://github.com/emmanuellujan/covid19-argentina">aquí.</a></div>' + \
                      html_div_0 + \
                      html_div_1 + \
                 '    </div>' + \
