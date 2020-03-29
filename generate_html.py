@@ -33,7 +33,7 @@ def exponential(x,a,b,c):
     return a * np.exp(b * x) + c
 
 # Plot graphic
-def generate_graphic(index_0, days_0 , y_0, label_0, col_0):
+def generate_graphic(index_0, days_0 , y_0, label_0):
     fig = go.Figure()
     n = len(index_0)
     no_samples = [14,7,3]
@@ -42,23 +42,37 @@ def generate_graphic(index_0, days_0 , y_0, label_0, col_0):
     # Calculate a regression based on the number days in no_samples
     for idx,j in enumerate(no_samples):
         # Calculate regression data
-        popt, pcov = curve_fit(exponential, index_0[n-j:n], y_0[n-j:n], maxfev=10000)
-        index_1 = np.array(list(range(n-1,n+no_predictions)))
-        datetime_object = datetime.strptime(days[n-1], '%Y-%m-%d %H:%M:%S')
-        days_1 = [datetime_object]
-        for i in range(no_predictions):
-            days_1.append( datetime_object + timedelta(days=i+1) )
-        y_1 = exponential(index_1, *popt)
-        # Add regression trace to the subplot panel
-        fig.add_trace(
-            go.Scatter(
-                x=days_1,
-                y=y_1,
-                mode='lines+markers',
-                marker_color=colors[idx],
-                name= 'Estimación en base a datos de los últimos '+str(j)+' días.',
-            ),
-        )
+
+        fit_successful = True
+        try:
+            popt, pcov = curve_fit(exponential, index_0[n-j:n], y_0[n-j:n], maxfev=20000)
+        except RuntimeError:
+            print("Warning - a curve fit failed for: " + label_0)
+            fit_successful = False
+
+        if fit_successful:
+            index_1 = np.array(list(range(n-1,n+no_predictions)))
+            datetime_object = datetime.strptime(days[n-1], '%Y-%m-%d %H:%M:%S')
+            days_1 = [datetime_object]
+            for i in range(no_predictions):
+                days_1.append( datetime_object + timedelta(days=i+1) )
+            y_1 =  np.around(exponential(index_1, *popt))
+
+            all_positives = True
+            for i in range(no_predictions):
+                all_positives = all_positives and y_1[i] >= 0
+
+            if all_positives:
+                # Add regression trace to the subplot panel
+                fig.add_trace(
+                    go.Scatter(
+                        x=days_1,
+                        y=y_1,
+                        mode='lines+markers',
+                        marker_color=colors[idx],
+                        name= 'Estimación en base a datos de los últimos '+str(j)+' días.',
+                    ),
+                )
     # Add actual data to the subplot panel
     fig.add_trace(
         go.Scatter(
@@ -73,11 +87,12 @@ def generate_graphic(index_0, days_0 , y_0, label_0, col_0):
     # Update subplot panel layout
     s = 12
     layout = go.Layout(
-        title= 'Cantidad total de '+label_0,
+        title= label_0,
         titlefont=dict(size=20),
         yaxis=dict(
             title='Cantidad de personas',
-            titlefont=dict(size=s)
+            titlefont=dict(size=s),
+            side='right'
         ),
         font=dict( size=s ),
         width=900,
@@ -92,7 +107,7 @@ def generate_graphic(index_0, days_0 , y_0, label_0, col_0):
     return plotly.offline.plot(fig, output_type='div', include_plotlyjs=False);
 
 
-def generate_html(html_div_0,html_div_1):
+def generate_html(html_divs):
     html_str =  '<!DOCTYPE html>' + \
                 '<html>' + \
                 '<head>' + \
@@ -101,11 +116,11 @@ def generate_html(html_div_0,html_div_1):
                 '</head>' + \
                 '<body>' + \
                 '    <h1 align="center">COVID-19, Argentina</h1>' + \
+                '    <h5 align="center">web en construcción</h5>' + \
                 '    <div style="text-align: center;">' + \
                 '    <div style="display: inline-block;">' + \
                 '    <div style="width:900px;text-align:justify;"> En esta web se realiza un seguimiento de la evolución del <a href="https://www.argentina.gob.ar/salud/coronavirus-COVID-19">COVID-19</a> en Argentina, concretamente de la cantidad total de infectados y de la cantidad total de decesos por día. Las curvas azules muestran datos suministrados por el <a href="https://www.argentina.gob.ar/coronavirus/informe-diario">Ministerio de Salud</a> argentino, y las curvas rojas muestran estimaciones básicas de la progresión de dichas variables. Dichas estimaciones se realizan en base al ajuste de funciones exponenciales calculadas a partir de los datos de los últimos 3, 7 y 14 días. El código fuente para la generación de esta web es Open Source y puede descargarse desde el siguiente <a href="https://github.com/emmanuellujan/covid19-argentina">enlace</a>.</div>' + \
-                     html_div_0 + \
-                     html_div_1 + \
+                    ''.join(str(div_str) for div_str in html_divs) + \
                 '    </div>' + \
                 '</body>' + \
                 '</html>'
@@ -125,13 +140,24 @@ labels = []
 days = []
 infected = []
 dead = []
+n_provinces = 24
+provinces = []
+for i in range(n_provinces):
+    provinces.append([])
 with open('covid19.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     labels = next(csv_reader)
-    for row in csv_reader:
+    for idx,row in enumerate(csv_reader):
         days.append(row[0])
         infected.append(int(row[1]))
         dead.append(int(row[2]))
+        for j in range(n_provinces):
+            if row[3+j] == 'N/A':
+                val = 0
+            else:
+                val = int(row[3+j])
+            provinces[j].append(val)
+#    print(provinces[0])
     n = len(days)
     index = np.array(list(range(n)))
     days = np.array(days)
@@ -139,9 +165,18 @@ with open('covid19.csv') as csv_file:
     dead = np.array(dead)
 
 # Generate html
-html_div_0 = generate_graphic(index, days, infected, 'infectados', 1)
-html_div_1 = generate_graphic(index, days, dead, 'fallecidos', 2)
-generate_html(html_div_0,html_div_1)
+html_divs = []
+html_divs.append( generate_graphic(index, days, infected, 'Cantidad total de infectados en Argentina') )
+html_divs.append( generate_graphic(index, days, dead, 'Cantidad total de fallecidos en Argentina') )
+
+for i in range(n_provinces):
+    accum = [provinces[i][0]]
+    for j in range(1,len(provinces[i])):
+        accum.append( provinces[i][j] + accum[j-1] )
+    accum = np.array(accum)
+    html_divs.append( generate_graphic(index, days, accum, 'Cantidad total de infectados en '+labels[3+i]) )
+
+generate_html(html_divs)
 
 
 
