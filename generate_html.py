@@ -45,7 +45,7 @@ def generate_graphic(index_0, days_0 , y_0, label_0):
 
         fit_successful = True
         try:
-            popt, pcov = curve_fit(exponential, index_0[n-j:n], y_0[n-j:n], maxfev=20000)
+            popt, pcov = curve_fit(exponential, index_0[n-j:n], y_0[n-j:n], maxfev=30000)
         except RuntimeError:
             print("Warning - a curve fit failed for: " + label_0)
             fit_successful = False
@@ -85,16 +85,15 @@ def generate_graphic(index_0, days_0 , y_0, label_0):
     )
 
     # Update subplot panel layout
-    s = 12
     layout = go.Layout(
         title= label_0,
-        titlefont=dict(size=25),
+        titlefont=dict(size=20),
         yaxis=dict(
             title='Cantidad de personas',
-            titlefont=dict(size=s),
+            titlefont=dict(size=18),
             side='right'
         ),
-        font=dict( size=s ),
+        font=dict( size=18 ),
         width=800,
         legend=dict(
             x=0,
@@ -119,7 +118,7 @@ def generate_html(html_divs):
                 '    <h5 align="center">web en construcción</h4>' + \
                 '    <div style="text-align: center;">' + \
                 '    <div style="display: inline-block;">' + \
-                '    <div style="width:800px;text-align:justify;"> En esta web se realiza un seguimiento de la evolución del <a href="https://www.argentina.gob.ar/salud/coronavirus-COVID-19">COVID-19</a> en Argentina, en particular de la cantidad de infectados y decesos por día. Las curvas azules muestran datos suministrados por el <a href="https://www.argentina.gob.ar/coronavirus/informe-diario">Ministerio de Salud</a> argentino, y las curvas rojas muestran estimaciones básicas de la progresión de dichas variables. Las estimaciones se realizan en base al ajuste de funciones exponenciales calculadas a partir de los datos de los últimos 3, 7 y 14 días. El código fuente para la generación de esta web es Open Source y puede descargarse desde el siguiente <a href="https://github.com/emmanuellujan/covid19-argentina">enlace</a>.</div><br>' + \
+                '    <div style="width:800px;text-align:justify;"> En esta página web se presenta información de la evolución del <a href="https://www.argentina.gob.ar/salud/coronavirus-COVID-19">COVID-19</a> en Argentina. Se proporciona información sobre el número de infecciones y muertes por día, basada en datos del <a href="https://www.argentina.gob.ar/coronavirus/informe-diario">Ministerio de Salud</a> de Argentina. Además, se presentan pronósticos básicos de las variables mencionadas. Los mismos se calcularon en base a ajustes de funciones exponenciales a partir de datos de los últimos 3, 7 y 14 días. El código fuente para la generación de este sitio web es de open-source y puede descargarse desde el siguiente <a href="https://github.com/emmanuellujan/covid19-argentina">enlace</a>.</div><br>' + \
                 '    <h2 align="left">Cantidad total de infectados y fallecidos</h2>' + \
                     ''.join(str(div_str) for div_str in html_divs[:2]) + \
                 '    <h2 align="left">Cantidad total de infectados por provincia</h2>' + \
