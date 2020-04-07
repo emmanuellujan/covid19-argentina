@@ -36,7 +36,7 @@ def exponential(x,a,b,c,d):
 
 
 # Calculate maximum-error estimation
-def calc_max_error(days, y, n_pred, samples,label):
+def calc_avg_estimation(days, y, n_pred, samples,label):
     n = len(days)
     index = np.array(list(range(n)))
     max_sample = max(samples)
@@ -121,7 +121,7 @@ def generate_graphic(days_0 , y_0, y_1, n_pred, samples, label_0, estimate):
                 y=y_1[16:],
                 mode='markers',
                 marker_color='orange',
-                name= 'Error promedio de estimación.', 
+                name= 'Estimación promedio pasada.', 
             )
         )
 
@@ -229,11 +229,11 @@ n_pred = 3
 samples = [14,7]
 province_estimations = False
 
-error_estimations = calc_max_error(days, infected, n_pred, samples, "Infectados totales")
+error_estimations = calc_avg_estimation(days, infected, n_pred, samples, "Infectados totales")
 html_divs.append( generate_graphic(days, infected, error_estimations, n_pred, samples, 
                   'Cantidad total de infectados en Argentina', True) )
 
-error_estimations = calc_max_error(days, dead, n_pred, samples, "Fallecidos totales")
+error_estimations = calc_avg_estimation(days, dead, n_pred, samples, "Fallecidos totales")
 html_divs.append( generate_graphic(days, dead, error_estimations, n_pred, samples, 
                   'Cantidad total de fallecidos en Argentina', True) )
 
@@ -244,7 +244,7 @@ for i in range(n_provinces):
         accum.append( provinces[i][j] + accum[j-1] )
     accum = np.array(accum)
     if province_estimations:
-        error_estimations = calc_max_error(days, accum,  n_pred, samples, labels[3+i])
+        error_estimations = calc_avg_estimation(days, accum,  n_pred, samples, labels[3+i])
     html_divs.append( generate_graphic(days, accum, error_estimations, n_pred, samples, 
                       'Cantidad total de infectados en '+labels[3+i], province_estimations) )
 
