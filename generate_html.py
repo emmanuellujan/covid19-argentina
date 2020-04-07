@@ -29,7 +29,7 @@ import plotly as plotly
 ################################################################################
 
 # Exponential function, used in regressions
-def exponential(x,a,b,c):
+def exponential(x,a,b,c,d):
     #return a * np.exp(b * x) 
     #return a * np.power(b, x)
     return a * np.power(x,b)
@@ -91,9 +91,9 @@ def generate_graphic(days_0 , y_0, y_1, n_pred, samples, label_0, estimate):
                 fit_successful = False
 
             if fit_successful:
-                index_1 = np.array(list(range(n-1,n+n_pred)))
+                index_1 = np.array(list(range(n,n+n_pred)))
                 datetime_object = datetime.strptime(days[n-1], '%Y-%m-%d %H:%M:%S')
-                days_1 = [datetime_object]
+                days_1 = []
                 for i in range(n_pred):
                     days_1.append( datetime_object + timedelta(days=i+1) )
                 y_2 =  np.around(exponential(index_1, *popt))
@@ -105,10 +105,10 @@ def generate_graphic(days_0 , y_0, y_1, n_pred, samples, label_0, estimate):
                 if all_positives:
                     # Add regression trace to the subplot panel
                     fig.add_trace(
-                        go.Scatter(
+                        go.Bar(
                             x=days_1,
                             y=y_2,
-                            mode='lines+markers',
+                            #mode='lines+markers',
                             marker_color=colors[idx],
                             name= 'Estimación en base a datos de los últimos '+str(j)+' días.',
                         ),
@@ -117,8 +117,8 @@ def generate_graphic(days_0 , y_0, y_1, n_pred, samples, label_0, estimate):
         # Add worst estimation data to the subplot panel
         fig.add_trace(
             go.Scatter(
-                x=days_0[15:],
-                y=y_1[15:],
+                x=days_0[16:],
+                y=y_1[16:],
                 mode='markers',
                 marker_color='orange',
                 name= 'Error promedio de estimación.', 
@@ -127,10 +127,10 @@ def generate_graphic(days_0 , y_0, y_1, n_pred, samples, label_0, estimate):
 
     # Add actual data to the subplot panel
     fig.add_trace(
-        go.Scatter(
+        go.Bar(
             x=days_0,
             y=y_0,
-            mode='lines+markers',
+            #mode='lines+markers',
             marker_color='#6396c1',
             name= 'Datos del Ministerio de Salud.', 
         )
@@ -143,19 +143,23 @@ def generate_graphic(days_0 , y_0, y_1, n_pred, samples, label_0, estimate):
         yaxis=dict(
             title='Cantidad de personas',
             titlefont=dict(size=18),
-            side='right'
+            side='right',
+            overlaying = 'y',
         ),
         font=dict( size=18 ),
         width=800,
+        showlegend=True,
         legend=dict(
             x=0,
             y=1.0,
+            bgcolor="rgba(0, 0, 0, 0.05)",
+            #orientation="h"
         ),
-#        yaxis_type="log",
+        barmode='overlay',
+        #yaxis_type="log",
     )
     fig.update_layout(layout)
 
-    #fig.show()
     return plotly.offline.plot(fig, output_type='div', include_plotlyjs=False);
 
 
@@ -171,8 +175,9 @@ def generate_html(html_divs):
                 '    <h5 align="center">web en construcción</h4>' + \
                 '    <div style="text-align: center;">' + \
                 '    <div style="display: inline-block;">' + \
-                '    <div style="width:800px;text-align:justify;"> En esta página web se presenta información de la evolución del <a href="https://www.argentina.gob.ar/salud/coronavirus-COVID-19">COVID-19</a> en Argentina. Se proporciona información sobre el número de infecciones y muertes por día, basada en datos del <a href="https://www.argentina.gob.ar/coronavirus/informe-diario">Ministerio de Salud</a> de Argentina. Además, se presentan pronósticos básicos de las variables mencionadas. Los mismos se calcularon en base a ajustes de funciones exponenciales a partir de datos de los últimos 7 y 14 días. El código fuente para la generación de este sitio web es de open-source y puede descargarse desde el siguiente <a href="https://github.com/emmanuellujan/covid19-argentina">enlace</a>.</div><br>' + \
+                '    <div style="width:800px;text-align:justify;"> En esta página web se presenta información de la evolución del <a href="https://www.argentina.gob.ar/salud/coronavirus-COVID-19">COVID-19</a> en Argentina. Se proporciona información sobre el número de infecciones y muertes por día, basada en datos del <a href="https://www.argentina.gob.ar/coronavirus/informe-diario">Ministerio de Salud</a> de Argentina. Además, se presentan estimaciones básicas de la progresión de las variables mencionadas. El código fuente para la generación de este sitio web es open-source y puede descargarse desde el siguiente <a href="https://github.com/emmanuellujan/covid19-argentina">enlace</a>.</div><br>' + \
                 '    <h2 align="left">Cantidad total de infectados y fallecidos</h2>' + \
+                '    <div style="width:800px;text-align:justify;"> Las estimaciones se calculan en base al ajuste diario de los parámetros <i>a</i> y <i>b</i> de la función<br> <i>f(x) = a * power(x,b)</i>, a partir de datos de los últimos días.</div><br>' + \
                     ''.join(str(div_str) for div_str in html_divs[:2]) + \
                 '    <h2 align="left">Cantidad de infectados desagregada</h2>' + \
                     ''.join(str(div_str) for div_str in html_divs[2:]) + \
@@ -220,8 +225,9 @@ with open('covid19.csv') as csv_file:
 # Generate html
 html_divs = []
 
-n_pred = 4
+n_pred = 3
 samples = [14,7]
+province_estimations = False
 
 error_estimations = calc_max_error(days, infected, n_pred, samples, "Infectados totales")
 html_divs.append( generate_graphic(days, infected, error_estimations, n_pred, samples, 
@@ -231,14 +237,16 @@ error_estimations = calc_max_error(days, dead, n_pred, samples, "Fallecidos tota
 html_divs.append( generate_graphic(days, dead, error_estimations, n_pred, samples, 
                   'Cantidad total de fallecidos en Argentina', True) )
 
+
 for i in range(n_provinces):
     accum = [provinces[i][0]]
     for j in range(1,len(provinces[i])):
         accum.append( provinces[i][j] + accum[j-1] )
     accum = np.array(accum)
-    error_estimations = calc_max_error(days, accum,  n_pred, samples, labels[3+i])
+    if province_estimations:
+        error_estimations = calc_max_error(days, accum,  n_pred, samples, labels[3+i])
     html_divs.append( generate_graphic(days, accum, error_estimations, n_pred, samples, 
-                      'Cantidad total de infectados en '+labels[3+i], False) )
+                      'Cantidad total de infectados en '+labels[3+i], province_estimations) )
 
 generate_html(html_divs)
 
